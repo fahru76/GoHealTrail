@@ -1,0 +1,15 @@
+{
+  "name": "@gohealt/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo \"types exported\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No lint for types\"",
+    "test": "echo \"No types tests yet\""
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

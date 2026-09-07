@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@gohealt/shared-types": ["packages/shared-types/src/index.ts"],
+      "@gohealt/shared-ui": ["packages/shared-ui/src/index.ts"],
+      "@gohealt/design-system": ["packages/design-system/src/index.ts"],
+      "@gohealt/geo": ["packages/geo/src/index.ts"]
+    }
+  }
+}

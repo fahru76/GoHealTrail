@@ -1,0 +1,15 @@
+{
+  "name": "@gohealt/geo",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo \"geo utilities ready for implementation\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No geo lint\"",
+    "test": "echo \"No geo tests yet\""
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

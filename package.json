@@ -1,0 +1,31 @@
+{
+  "name": "gohealttrail",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "npm@10",
+  "description": "GoHealTrail monorepo for web, mobile, and API",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run --workspace @gohealt/web dev",
+    "dev:mobile": "npm run --workspace @gohealt/mobile dev",
+    "dev:api": "npm run --workspace @gohealt/api dev",
+    "build": "npm run --workspaces build",
+    "lint": "npm run --workspaces lint",
+    "test": "npm run --workspaces test",
+    "typecheck": "npm run --workspaces typecheck",
+    "prepare": "npm install"
+  },
+  "keywords": [
+    "outdoor",
+    "trails",
+    "malaysia",
+    "travel",
+    "web",
+    "mobile",
+    "full-stack"
+  ],
+  "license": "MIT"
+}

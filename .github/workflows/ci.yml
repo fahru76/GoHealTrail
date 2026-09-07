@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: web
+            path: ./apps/web
+            build: npm run build --workspace @gohealt/web
+          - app: api
+            path: ./apps/api
+            build: npm run build --workspace @gohealt/api
+          - app: mobile
+            path: ./apps/mobile
+            build: npm run build --workspace @gohealt/mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Lint workspace
+        run: npm run lint
+
+      - name: Test workspace
+        run: npm run test
+
+      - name: Build ${{ matrix.app }}
+        run: ${{ matrix.build }}

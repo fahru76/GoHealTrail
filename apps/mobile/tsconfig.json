@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "jsx": "react-native",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "types": ["react/next", "react-dom"],
+    "baseUrl": ".",
+    "paths": {
+      "@gohealt/shared-types": ["../packages/shared-types/src/index.ts"],
+      "@gohealt/shared-ui": ["../packages/shared-ui/src/index.ts"],
+      "@gohealt/design-system": ["../packages/design-system/src/index.ts"],
+      "@gohealt/geo": ["../packages/geo/src/index.ts"]
+    }
+  }
+}

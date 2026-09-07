@@ -1,0 +1,15 @@
+{
+  "name": "@gohealt/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo \"Design token export done in source files\"",
+    "lint": "echo \"No tokens lint step yet\"",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"No design-system tests yet\""
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

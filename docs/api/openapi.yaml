@@ -1,0 +1,186 @@
+openapi: 3.0.3
+info:
+  title: GoHealTrail API
+  version: 0.1.0
+  description: API contract for trail discovery, trip planning, and safety flows.
+servers:
+  - url: https://api.gohealttrail.app/v1
+
+paths:
+  /trails:
+    get:
+      summary: Search trails
+      parameters:
+        - in: query
+          name: state
+          schema: { type: string }
+          description: Malaysia state filter
+        - in: query
+          name: difficulty
+          schema: { type: string }
+        - in: query
+          name: keyword
+          schema: { type: string }
+      responses:
+        '200':
+          description: Trail search result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrailSearchResponse'
+
+  /trails/{trailId}:
+    get:
+      summary: Get trail detail
+      parameters:
+        - in: path
+          name: trailId
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Trail detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrailDetail'
+
+  /trips:
+    get:
+      summary: List trips
+      responses:
+        '200':
+          description: Trip list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TripPlan'
+    post:
+      summary: Create trip plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripPlanCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripPlan'
+
+  /trips/{tripId}:
+    patch:
+      summary: Update trip plan
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TripPlanUpdate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TripPlan'
+
+  /trips/{tripId}/sos:
+    post:
+      summary: Send SOS event for a trip
+      parameters:
+        - in: path
+          name: tripId
+          required: true
+          schema: { type: string }
+      responses:
+        '202':
+          description: SOS accepted for dispatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SosAck'
+
+components:
+  schemas:
+    Trail:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        state: { type: string }
+        difficulty: { type: string }
+        distanceKm: { type: number }
+        durationMinutes: { type: number }
+        tags: { type: array, items: { type: string } }
+
+    TrailSearchResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Trail' }
+        total: { type: integer }
+
+    TrailDetail:
+      allOf:
+        - $ref: '#/components/schemas/Trail'
+        - type: object
+          properties:
+            geometry: { type: object }
+            conditions:
+              type: array
+              items: { $ref: '#/components/schemas/Condition' }
+
+    Condition:
+      type: object
+      properties:
+        id: { type: string }
+        severity: { type: string }
+        reportedAt: { type: string, format: date-time }
+        note: { type: string }
+
+    TripPlan:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        userId: { type: string }
+        startDate: { type: string, format: date-time }
+        endDate: { type: string, format: date-time }
+        status: { type: string }
+
+    TripPlanCreate:
+      type: object
+      required: [title, startDate, endDate]
+      properties:
+        title: { type: string }
+        startDate: { type: string, format: date-time }
+        endDate: { type: string, format: date-time }
+        itinerary: { type: array, items: { type: object } }
+        checklist: { type: array, items: { type: string } }
+
+    TripPlanUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        status: { type: string }
+        itinerary: { type: array, items: { type: object } }
+        checklist: { type: array, items: { type: string } }
+
+    SosAck:
+      type: object
+      properties:
+        eventId: { type: string }
+        accepted: { type: boolean }
+        requestedAt: { type: string, format: date-time }

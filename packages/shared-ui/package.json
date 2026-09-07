@@ -1,0 +1,15 @@
+{
+  "name": "@gohealt/shared-ui",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "echo \"shared-ui build placeholder\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"No shared-ui lint\"",
+    "test": "echo \"No shared-ui tests yet\""
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}
