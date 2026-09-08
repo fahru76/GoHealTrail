@@ -10,13 +10,15 @@
     "test": "echo \"No API tests yet\""
   },
   "dependencies": {
-    "@fastify/cors": "10.0.1",
+    "@supabase/supabase-js": "^2.116.0",
     "fastify": "4.28.1"
   },
   "devDependencies": {
-    "typescript": "5.5.4",
-    "tsx": "4.19.1",
+    "@fastify/cors": "^9.0.1",
     "@types/node": "22.9.0",
-    "eslint": "9.9.1"
+    "eslint": "9.9.1",
+    "ts-node": "^10.9.2",
+    "tsx": "4.19.1",
+    "typescript": "5.5.4"
   }
 }

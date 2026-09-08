@@ -26,5 +26,8 @@
     "mobile",
     "full-stack"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.7"
+  }
 }

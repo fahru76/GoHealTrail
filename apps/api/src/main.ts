@@ -1,151 +1,203 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { randomUUID } from 'node:crypto'
-import { demoAlerts, demoTrails } from './data/trails'
-import type { Trail, TripPlan } from '@gohealt/shared-types'
+import 'dotenv/config'
+import { supabase } from './lib/supabase.js'
+import { seedDatabase } from './seed.js'
 
 const server = Fastify({ logger: true })
 
-await server.register(cors, {
-  origin: true
-})
-
-const plans: TripPlan[] = [
-  {
-    id: 'plan-001',
-    title: 'Weekend FRIM Escape',
-    userId: 'demo-user',
-    startDate: '2026-09-14',
-    endDate: '2026-09-14',
-    itinerary: [
-      {
-        day: 1,
-        trailId: 't-004',
-        notes: 'Start early, keep hydration and keep walking pace at moderate tempo.'
-      }
-    ],
-    checklist: ['Power bank', 'Enough water', 'Trekking shoes', 'Torch', 'Emergency contacts']
-  }
-]
-
-server.get('/health', async () => ({
-  ok: true,
-  service: 'gohealttrail-api',
-  version: '0.1.0'
-}))
-
-server.get('/trails', async (request) => {
-  const state = (request.query as { state?: string }).state
-  const difficulty = (request.query as { difficulty?: string }).difficulty
-
-  const filtered = demoTrails.filter((trail) => {
-    const byState = state ? trail.state.toLowerCase() === state.toLowerCase() : true
-    const byDifficulty = difficulty ? trail.difficulty === (difficulty as Trail['difficulty']) : true
-    return byState && byDifficulty
+async function bootstrap() {
+  await server.register(cors, {
+    origin: true,
   })
 
-  return {
-    trails: filtered,
-    count: filtered.length
-  }
-})
+  // Health check
+  server.get('/health', async () => ({
+    ok: true,
+    service: 'gohealttrail-api',
+    version: '0.1.0',
+  }))
 
-server.get('/trails/:id', async (request, reply) => {
-  const { id } = request.params as { id: string }
-  const trail = demoTrails.find((item) => item.id === id)
+  // Seed endpoint (for development)
+  server.post('/seed', async (request, reply) => {
+    try {
+      await seedDatabase()
+      return { success: true }
+    } catch (err) {
+      await reply.code(500)
+      return { error: 'Seed failed', details: String(err) }
+    }
+  })
 
-  if (!trail) {
-    await reply.code(404)
-    return { error: 'Trail not found' }
-  }
+  // GET /trails
+  server.get('/trails', async (request) => {
+    const state = (request.query as { state?: string }).state
+    const difficulty = (request.query as { difficulty?: string }).difficulty
 
-  const alerts = demoAlerts.filter((alert) => alert.trailId === id)
-  return { trail, alerts }
-})
+    let query = supabase.from('trails').select('*')
+    if (state) query = query.ilike('state', `%${state}%`)
+    if (difficulty) query = query.eq('difficulty', difficulty)
 
-server.get('/alerts', async () => ({
-  alerts: demoAlerts,
-  activeWarnings: demoAlerts.filter((alert) => alert.level !== 'info').length
-}))
+    const { data, error } = await query
+    if (error) {
+      throw new Error(`Database error: ${error.message}`)
+    }
 
-server.get('/plans', async (request) => {
-  const userId = (request.query as { userId?: string }).userId
-  const mine = userId ? plans.filter((plan) => plan.userId === userId) : plans
-  return { plans: mine }
-})
+    return {
+      trails: data || [],
+      count: data?.length || 0,
+    }
+  })
 
-server.post('/plans', async (request, reply) => {
-  const payload = request.body as {
-    title?: string
-    userId?: string
-    startDate?: string
-    endDate?: string
-    itinerary?: Array<{ day: number; trailId: string; notes: string }>
-    checklist?: string[]
-  }
+  // GET /trails/:id
+  server.get('/trails/:id', async (request, reply) => {
+    const { id } = request.params as { id: string }
+    const { data: trail, error } = await supabase
+      .from('trails')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-  const missing =
-    !payload?.title ||
-    !payload?.userId ||
-    !payload?.startDate ||
-    !payload?.endDate ||
-    !Array.isArray(payload.itinerary) ||
-    !Array.isArray(payload.checklist)
+    if (error || !trail) {
+      await reply.code(404)
+      return { error: 'Trail not found' }
+    }
 
-  if (missing) {
-    await reply.code(400)
-    return { error: 'Invalid plan payload' }
-  }
+    const { data: alerts, error: alertsError } = await supabase
+      .from('alerts')
+      .select('*')
+      .eq('trail_id', id)
 
-  const plan: TripPlan = {
-    id: randomUUID(),
-    title: payload.title ?? '',
-    userId: payload.userId ?? '',
-    startDate: payload.startDate ?? '',
-    endDate: payload.endDate ?? '',
-    itinerary: payload.itinerary ?? [],
-    checklist: payload.checklist ?? []
-  }
+    if (alertsError) {
+      await reply.code(500)
+      return { error: `Database error: ${alertsError.message}` }
+    }
 
-  plans.push(plan)
-  await reply.code(201)
-  return plan
-})
+    return { trail, alerts: alerts || [] }
+  })
 
-server.get('/offline-manifest', async () => ({
-  generatedAt: new Date().toISOString(),
-  version: demoTrails.length + '-' + new Date().toISOString().slice(0, 10),
-  trails: demoTrails
-}))
+  // GET /alerts
+  server.get('/alerts', async () => {
+    const { data, error } = await supabase
+      .from('alerts')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) {
+      throw new Error(`Database error: ${error.message}`)
+    }
 
-server.post('/sos', async (request, reply) => {
-  const payload = request.body as {
-    userId?: string
-    latitude?: number
-    longitude?: number
-    contacts?: string[]
-    notes?: string
-  }
+    return {
+      alerts: data || [],
+      activeWarnings: (data || []).filter((a) => a.level !== 'info').length,
+    }
+  })
 
-  if (!payload?.userId || typeof payload.latitude !== 'number' || typeof payload.longitude !== 'number') {
-    await reply.code(400)
-    return { error: 'Invalid SOS payload. userId and numeric latitude/longitude required.' }
-  }
+  // GET /plans
+  server.get('/plans', async (request) => {
+    const userId = (request.query as { userId?: string }).userId
+    let query = supabase.from('trip_plans').select('*')
+    if (userId) query = query.eq('user_id', userId)
 
-  const eventId = randomUUID()
+    const { data, error } = await query
+    if (error) {
+      throw new Error(`Database error: ${error.message}`)
+    }
 
-  return {
-    eventId,
-    status: 'accepted',
-    sharedLocation: {
-      latitude: payload.latitude,
-      longitude: payload.longitude
-    },
-    notes: payload.notes ?? 'No extra notes provided'
-  }
-})
+    return { plans: data || [] }
+  })
 
-server.listen({ host: '0.0.0.0', port: 8080 }).catch((err) => {
+  // POST /plans
+  server.post('/plans', async (request, reply) => {
+    const payload = request.body as {
+      title?: string
+      userId?: string
+      startDate?: string
+      endDate?: string
+      itinerary?: Array<{ day: number; trailId: string; notes: string }>
+      checklist?: string[]
+    }
+
+    const missing =
+      !payload?.title ||
+      !payload?.userId ||
+      !payload?.startDate ||
+      !payload?.endDate ||
+      !Array.isArray(payload.itinerary) ||
+      !Array.isArray(payload.checklist)
+
+    if (missing) {
+      await reply.code(400)
+      return { error: 'Invalid plan payload' }
+    }
+
+    const plan = {
+      id: randomUUID(),
+      title: payload.title,
+      user_id: payload.userId,
+      start_date: payload.startDate,
+      end_date: payload.endDate,
+      itinerary: payload.itinerary,
+      checklist: payload.checklist,
+    }
+
+    const { data, error } = await supabase.from('trip_plans').insert(plan).select().single()
+
+    if (error) {
+      await reply.code(500)
+      return { error: `Database error: ${error.message}` }
+    }
+
+    await reply.code(201)
+    return data
+  })
+
+  // GET /offline-manifest
+  server.get('/offline-manifest', async () => {
+    const { data: trails, error } = await supabase.from('trails').select('*')
+    if (error) {
+      throw new Error(`Database error: ${error.message}`)
+    }
+
+    return {
+      generatedAt: new Date().toISOString(),
+      version: `${(trails || []).length}-${new Date().toISOString().slice(0, 10)}`,
+      trails: trails || [],
+    }
+  })
+
+  // POST /sos
+  server.post('/sos', async (request, reply) => {
+    const payload = request.body as {
+      userId?: string
+      latitude?: number
+      longitude?: number
+      contacts?: string[]
+      notes?: string
+    }
+
+    if (!payload?.userId || typeof payload.latitude !== 'number' || typeof payload.longitude !== 'number') {
+      await reply.code(400)
+      return { error: 'Invalid SOS payload. userId and numeric latitude/longitude required.' }
+    }
+
+    const eventId = randomUUID()
+
+    return {
+      eventId,
+      status: 'accepted',
+      sharedLocation: {
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+      },
+      notes: payload.notes ?? 'No extra notes provided',
+    }
+  })
+
+  await server.listen({ host: '0.0.0.0', port: 8080 })
+}
+
+bootstrap().catch((err) => {
   server.log.error(err)
   process.exit(1)
 })
