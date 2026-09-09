@@ -3,6 +3,18 @@
 import { useMemo, useState } from 'react'
 import type { Trail, TripPlan } from '@gohealt/shared-types'
 
+type RegionReference = {
+  state: string
+  amenityForests: number
+  stateParkForests: number
+  totalSites: number
+}
+
+type TrailAttraction = {
+  type: string
+  labels: [string, string][]
+}
+
 const demoTrails: Trail[] = [
   {
     id: 't-001',
@@ -11,7 +23,7 @@ const demoTrails: Trail[] = [
     difficulty: 'moderate',
     distanceKm: 6.5,
     durationMinutes: 240,
-    hasWater: true
+    hasWater: true,
   },
   {
     id: 't-002',
@@ -20,7 +32,7 @@ const demoTrails: Trail[] = [
     difficulty: 'hard',
     distanceKm: 11,
     durationMinutes: 360,
-    hasWater: true
+    hasWater: true,
   },
   {
     id: 't-003',
@@ -29,7 +41,7 @@ const demoTrails: Trail[] = [
     difficulty: 'easy',
     distanceKm: 4.2,
     durationMinutes: 150,
-    hasWater: false
+    hasWater: false,
   },
   {
     id: 't-004',
@@ -38,7 +50,7 @@ const demoTrails: Trail[] = [
     difficulty: 'easy',
     distanceKm: 5,
     durationMinutes: 120,
-    hasWater: false
+    hasWater: false,
   },
   {
     id: 't-005',
@@ -47,8 +59,8 @@ const demoTrails: Trail[] = [
     difficulty: 'hard',
     distanceKm: 9,
     durationMinutes: 320,
-    hasWater: true
-  }
+    hasWater: true,
+  },
 ]
 
 const demoAlerts = [
@@ -56,15 +68,81 @@ const demoAlerts = [
     trailId: 't-002',
     level: 'warning' as const,
     title: 'Recent heavy rain',
-    message: 'Sections near summit are slippery. Carry anti-slip gear and avoid dusk travel.'
+    message: 'Sections near summit are slippery. Carry anti-slip gear and avoid dusk travel.',
   },
   {
     trailId: 't-004',
     level: 'info' as const,
     title: 'Updated water refill point',
-    message: 'Water station at FRIM River Trail checkpoint is open on weekends.'
-  }
+    message: 'Water station at FRIM River Trail checkpoint is open on weekends.',
+  },
 ]
+
+const kompendiumSnapshot: RegionReference[] = [
+  { state: 'Johor', amenityForests: 8, stateParkForests: 0, totalSites: 8 },
+  { state: 'Kedah', amenityForests: 27, stateParkForests: 0, totalSites: 27 },
+  { state: 'Kelantan', amenityForests: 3, stateParkForests: 1, totalSites: 4 },
+  { state: 'Melaka', amenityForests: 4, stateParkForests: 1, totalSites: 5 },
+  { state: 'Negeri Sembilan', amenityForests: 11, stateParkForests: 0, totalSites: 11 },
+  { state: 'Pahang', amenityForests: 28, stateParkForests: 1, totalSites: 29 },
+  { state: 'Perak', amenityForests: 16, stateParkForests: 0, totalSites: 16 },
+  { state: 'Perlis', amenityForests: 3, stateParkForests: 1, totalSites: 4 },
+  { state: 'Pulau Pinang', amenityForests: 2, stateParkForests: 1, totalSites: 3 },
+  { state: 'Selangor', amenityForests: 10, stateParkForests: 1, totalSites: 10 },
+  { state: 'Terengganu', amenityForests: 11, stateParkForests: 0, totalSites: 11 },
+  { state: 'W.P. Kuala Lumpur', amenityForests: 1, stateParkForests: 0, totalSites: 1 },
+]
+
+const trailAttractions: TrailAttraction[] = [
+  {
+    type: 'Attractions',
+    labels: [
+      ['Kajian/Pendidikan', 'Research / Education'],
+      ['Sungai', 'River'],
+      ['Air Terjun', 'Waterfall'],
+      ['Berkelah', 'Picnic'],
+      ['Berkhemah', 'Camping'],
+      ['Berenang', 'Swimming'],
+      ['Treking', 'Trekking'],
+      ['Mendaki Gunung', 'Mountain Climbing'],
+      ['Gua', 'Cave'],
+      ['Muzium Perhutanan', 'Forestry Museum'],
+      ['Hidupan Liar', 'Wildlife'],
+      ['Tapak Geologi', 'Geological Site'],
+      ['Titian Silara', 'Canopy Walk'],
+      ['Rafting', 'Rafting'],
+      ['Berkayak', 'Canoeing'],
+    ],
+  },
+  {
+    type: 'Facilities',
+    labels: [
+      ['Parkir', 'Parking'],
+      ['Tandas', 'Toilet'],
+      ['Pondok Rehat', 'Resting Hut'],
+      ['Pusat Maklumat', 'Information Centre'],
+      ['Chalet/Asrama', 'Chalet / Dormitory'],
+      ['Dewan Serbaguna', 'Multi-purpose Hall'],
+      ['Gerai', 'Stall'],
+      ['Padang', 'Field'],
+      ['Pelantar/Laluan Jambatan Gantung', 'Boardwalk / Hanging Bridge'],
+      ['Jeti', 'Jetty'],
+      ['Laluan OKU', 'Path for disabled access'],
+      ['Menara Pandang', 'Look-out Tower'],
+      ['Tempat Memasak', 'Cooking Site'],
+    ],
+  },
+]
+
+const safetyRules = [
+  'Do not vandalize or damage plants and facilities.',
+  'Keep the forest clean and preserve its beauty.',
+  'Any fire or cooking activity must be supervised to prevent forest-fire risk.',
+  'Climbing, fishing, camping, and chalet/cabin use requires prior permission.',
+]
+
+const permitNotice =
+  'Permit matrix from POSTER_STATUS_KAWASAN_PENDAKIAN... is currently a scanned PDF without text extraction in this environment. It should be added as structured data once OCR is done.'
 
 const offlineManifestVersion = '2026-09-07'
 const defaultChecklist = ['Water', 'Food', 'Power bank', 'First aid kit', 'Rain jacket']
@@ -84,7 +162,7 @@ function FilterSection({
   difficulty,
   onState,
   onDifficulty,
-  onClear
+  onClear,
 }: {
   state: string
   difficulty: string
@@ -92,13 +170,23 @@ function FilterSection({
   onDifficulty: (value: string) => void
   onClear: () => void
 }) {
+  const availableStates = Array.from(
+    new Set([
+      ...demoTrails.map((trail) => trail.state),
+      ...kompendiumSnapshot.map((entry) => entry.state),
+      ...['Johor', 'Kedah', 'Terengganu', 'Pulau Pinang', 'Negeri Sembilan'],
+    ])
+  ).sort()
+
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 12, marginBottom: 16 }}>
       <select value={state} onChange={(event) => onState(event.target.value)}>
         <option value="">All states</option>
-        <option value="Selangor">Selangor</option>
-        <option value="Kelantan">Kelantan</option>
-        <option value="Pahang">Pahang</option>
+        {availableStates.map((value) => (
+          <option key={value} value={value}>
+            {value}
+          </option>
+        ))}
       </select>
 
       <select value={difficulty} onChange={(event) => onDifficulty(event.target.value)}>
@@ -108,14 +196,16 @@ function FilterSection({
         <option value="hard">Hard</option>
       </select>
 
-      <button type="button" onClick={onClear}>Clear</button>
+      <button type="button" onClick={onClear}>
+        Clear
+      </button>
     </div>
   )
 }
 
 function TrailListItem({
   trail,
-  onPlan
+  onPlan,
 }: {
   trail: Trail
   onPlan: (trail: Trail) => void
@@ -142,7 +232,6 @@ export default function Home() {
   const [tripName, setTripName] = useState('Weekend Rescue Trail')
   const [selectedTrail, setSelectedTrail] = useState<Trail>(demoTrails[0])
   const [planSaved, setPlanSaved] = useState(false)
-  const [checklist, setChecklist] = useState(defaultChecklist)
 
   const visibleTrails = useMemo(() => {
     return demoTrails.filter((trail) => {
@@ -151,8 +240,6 @@ export default function Home() {
       return byState && byDifficulty
     })
   }, [stateFilter, difficultyFilter])
-
-  const alertsCount = demoAlerts.length
 
   const lastPlan: TripPlan = {
     id: 'draft',
@@ -164,10 +251,10 @@ export default function Home() {
       {
         day: 1,
         trailId: selectedTrail.id,
-        notes: 'Start at 6:30 AM. Check weather and trail closure status.'
-      }
+        notes: 'Start at 6:30 AM. Check weather and trail closure status.',
+      },
     ],
-    checklist
+    checklist: defaultChecklist,
   }
 
   function createPlan() {
@@ -180,9 +267,9 @@ export default function Home() {
         {
           day: 1,
           trailId: selectedTrail.id,
-          notes: 'Use offline trail package and keep hydration points logged.'
-        }
-      ]
+          notes: 'Use offline trail package and keep hydration points logged.',
+        },
+      ],
     }
 
     localStorage.setItem('gohealttrail:last-plan', JSON.stringify(plan))
@@ -193,7 +280,7 @@ export default function Home() {
     const payload = {
       manifestVersion: offlineManifestVersion,
       trails: visibleTrails,
-      downloadedAt: new Date().toISOString()
+      downloadedAt: new Date().toISOString(),
     }
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
@@ -210,24 +297,89 @@ export default function Home() {
   }
 
   return (
-    <main style={{
-      margin: '0 auto',
-      maxWidth: 960,
-      padding: 24,
-      lineHeight: 1.5,
-      color: '#e8ebf1'
-    }}>
+    <main
+      style={{
+        margin: '0 auto',
+        maxWidth: 1024,
+        padding: 24,
+        lineHeight: 1.5,
+        color: '#e8ebf1',
+      }}
+    >
       <h1>GoHealTrail MVP</h1>
       <p>Trail discovery, planning, and safety-first flow for Malaysia outdoors.</p>
 
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 24 }}>
         <h2>Safety banner</h2>
         <p>
-          Active alerts: {alertsCount} · Offline manifest: {offlineManifestVersion}
+          Active alerts: {demoAlerts.length} · Offline manifest: {offlineManifestVersion}
         </p>
       </section>
 
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 24 }}>
+        <h2>Malaysia forest reference (Kompendium extraction)</h2>
+        <p>
+          Source: Compendium of Amenity Forests and State Park Forests in Peninsular Malaysia (JPSM/FDPM).
+        </p>
+        <div
+          style={{
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: 10,
+            padding: 12,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: 10,
+          }}
+        >
+          {kompendiumSnapshot.map((entry) => (
+            <article
+              key={entry.state}
+              style={{ background: 'rgba(255,255,255,0.03)', padding: 10, borderRadius: 8 }}
+            >
+              <div style={{ fontWeight: 700 }}>{entry.state}</div>
+              <div>Amenity forests: {entry.amenityForests}</div>
+              <div>State park forests: {entry.stateParkForests}</div>
+              <div>Total: {entry.totalSites}</div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ marginBottom: 24 }}>
+        <h2>Attractions and facilities indicators</h2>
+        {trailAttractions.map((group) => (
+          <div key={group.type} style={{ marginBottom: 12 }}>
+            <h3>{group.type}</h3>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {group.labels.map(([ms, en]) => (
+                <span
+                  key={`${group.type}-${ms}`}
+                  style={{
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: 999,
+                    padding: '4px 10px',
+                    fontSize: 13,
+                  }}
+                >
+                  {ms} / {en}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
+
+      <section style={{ marginBottom: 24 }}>
+        <h2>Safety & permit reminders</h2>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {safetyRules.map((rule) => (
+            <li key={rule}>{rule}</li>
+          ))}
+        </ul>
+        <p style={{ marginTop: 8, opacity: 0.85 }}>{permitNotice}</p>
+      </section>
+
+      <section style={{ marginBottom: 24 }}>
         <h2>Discover trails</h2>
         <FilterSection
           state={stateFilter}
@@ -255,7 +407,7 @@ export default function Home() {
         </ul>
       </section>
 
-      <section style={{ marginBottom: 22 }}>
+      <section style={{ marginBottom: 24 }}>
         <h2>Trip planner</h2>
         <label htmlFor="trip-name">Trip title</label>
         <input
@@ -285,7 +437,9 @@ export default function Home() {
       <section>
         <h2>Emergency</h2>
         <p>If conditions worsen, tap SOS to send tracked event.</p>
-        <button type="button" onClick={triggerSOS}>Send SOS</button>
+        <button type="button" onClick={triggerSOS}>
+          Send SOS
+        </button>
       </section>
     </main>
   )

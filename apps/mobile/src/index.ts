@@ -1,10 +1,88 @@
 import type { Trail, TripPlan } from '@gohealt/shared-types'
 
+type RegionReference = {
+  state: string
+  amenityForests: number
+  stateParkForests: number
+  totalSites: number
+}
+
+type TrailAttraction = {
+  type: string
+  labels: [string, string][]
+}
+
 export const meta = {
   name: 'GoHealTrail Mobile',
-  description: 'Nature and trail planning MVP shell',
-  offlineFirst: true
+  description: 'Malaysia-focused trail planning shell with safety and permit reminders',
+  offlineFirst: true,
 }
+
+export const kompendiumSnapshot: RegionReference[] = [
+  { state: 'Johor', amenityForests: 8, stateParkForests: 0, totalSites: 8 },
+  { state: 'Kedah', amenityForests: 27, stateParkForests: 0, totalSites: 27 },
+  { state: 'Kelantan', amenityForests: 3, stateParkForests: 1, totalSites: 4 },
+  { state: 'Melaka', amenityForests: 4, stateParkForests: 1, totalSites: 5 },
+  { state: 'Negeri Sembilan', amenityForests: 11, stateParkForests: 0, totalSites: 11 },
+  { state: 'Pahang', amenityForests: 28, stateParkForests: 1, totalSites: 29 },
+  { state: 'Perak', amenityForests: 16, stateParkForests: 0, totalSites: 16 },
+  { state: 'Perlis', amenityForests: 3, stateParkForests: 1, totalSites: 4 },
+  { state: 'Pulau Pinang', amenityForests: 2, stateParkForests: 1, totalSites: 3 },
+  { state: 'Selangor', amenityForests: 10, stateParkForests: 1, totalSites: 10 },
+  { state: 'Terengganu', amenityForests: 11, stateParkForests: 0, totalSites: 11 },
+  { state: 'W.P. Kuala Lumpur', amenityForests: 1, stateParkForests: 0, totalSites: 1 },
+]
+
+export const trailAttractions: TrailAttraction[] = [
+  {
+    type: 'Attractions',
+    labels: [
+      ['Kajian/Pendidikan', 'Research / Education'],
+      ['Sungai', 'River'],
+      ['Air Terjun', 'Waterfall'],
+      ['Berkelah', 'Picnic'],
+      ['Berkhemah', 'Camping'],
+      ['Berenang', 'Swimming'],
+      ['Treking', 'Trekking'],
+      ['Mendaki Gunung', 'Mountain Climbing'],
+      ['Gua', 'Cave'],
+      ['Muzium Perhutanan', 'Forestry Museum'],
+      ['Hidupan Liar', 'Wildlife'],
+      ['Tapak Geologi', 'Geological Site'],
+      ['Titian Silara', 'Canopy Walk'],
+      ['Rafting', 'Rafting'],
+      ['Berkayak', 'Canoeing'],
+    ],
+  },
+  {
+    type: 'Facilities',
+    labels: [
+      ['Parkir', 'Parking'],
+      ['Tandas', 'Toilet'],
+      ['Pondok Rehat', 'Resting Hut'],
+      ['Pusat Maklumat', 'Information Centre'],
+      ['Chalet/Asrama', 'Chalet / Dormitory'],
+      ['Dewan Serbaguna', 'Multi-purpose Hall'],
+      ['Gerai', 'Stall'],
+      ['Padang', 'Field'],
+      ['Pelantar/Laluan Jambatan Gantung', 'Boardwalk / Hanging Bridge'],
+      ['Jeti', 'Jetty'],
+      ['Laluan OKU', 'Path for disabled access'],
+      ['Menara Pandang', 'Look-out Tower'],
+      ['Tempat Memasak', 'Cooking Site'],
+    ],
+  },
+]
+
+export const safetyRules = [
+  'Do not vandalize or damage plants and facilities.',
+  'Keep the forest clean and preserve its beauty.',
+  'Any fire or cooking activity must be supervised to prevent forest-fire risk.',
+  'Climbing, fishing, camping, and chalet/cabin use requires prior permission.',
+]
+
+export const permitNotice =
+  'Permit matrix from POSTER_STATUS_KAWASAN_PENDAKIAN... is currently a scanned PDF without text extraction in this environment. It should be added as structured data once OCR is completed.'
 
 export const trails: Trail[] = [
   {
@@ -14,7 +92,7 @@ export const trails: Trail[] = [
     difficulty: 'moderate',
     distanceKm: 6.5,
     durationMinutes: 240,
-    hasWater: true
+    hasWater: true,
   },
   {
     id: 't-002',
@@ -23,7 +101,7 @@ export const trails: Trail[] = [
     difficulty: 'hard',
     distanceKm: 11,
     durationMinutes: 360,
-    hasWater: true
+    hasWater: true,
   },
   {
     id: 't-004',
@@ -32,8 +110,17 @@ export const trails: Trail[] = [
     difficulty: 'easy',
     distanceKm: 5,
     durationMinutes: 120,
-    hasWater: false
-  }
+    hasWater: false,
+  },
+  {
+    id: 't-005',
+    name: 'Mount Nuang Camp Ridge',
+    state: 'Selangor',
+    difficulty: 'hard',
+    distanceKm: 9,
+    durationMinutes: 320,
+    hasWater: true,
+  },
 ]
 
 export const alerts = [
@@ -41,8 +128,8 @@ export const alerts = [
     trailId: 't-002',
     level: 'warning' as const,
     title: 'Heavy rain expected',
-    message: 'Wear anti-slip shoes, avoid rocky shortcuts.'
-  }
+    message: 'Wear anti-slip shoes, avoid rocky shortcuts.',
+  },
 ]
 
 export const starterChecklist = ['Water', 'Food', 'Torch', 'Rain jacket', 'First aid kit']
@@ -58,9 +145,9 @@ export function buildPlan(title: string, userId: string, selectedTrailId: string
       {
         day: 1,
         trailId: selectedTrailId,
-        notes: 'Start early and keep offline map enabled.'
-      }
+        notes: 'Start early and keep offline map enabled.',
+      },
     ],
-    checklist: [...starterChecklist]
+    checklist: [...starterChecklist],
   }
 }
