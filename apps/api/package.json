@@ -7,7 +7,7 @@
     "build": "tsc --noEmit",
     "lint": "eslint . || true",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"No API tests yet\""
+    "test": "node ../../scripts/smoke-api.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
